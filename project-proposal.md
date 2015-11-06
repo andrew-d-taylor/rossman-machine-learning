@@ -14,4 +14,4 @@ receives its submission score from Rossman.
 
 Our approach to forecasting sales will involve [how we plan to move from concept to 'validated approach'].
 
-Our approach is informed by previous research in this area, including: [research papers]
+Our approach is informed by previous research in this area, including: [research papers] http://www.eco.uc3m.es/temp/Trindade.pdf
