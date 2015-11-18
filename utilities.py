@@ -6,10 +6,10 @@ import statsmodels.api as sm
 import matplotlib.pyplot as plt
 
 def createFlatCsv():
-    trainDf = pd.read_csv('train.csv')
-    storeDf = pd.read_csv('store.csv')
+    trainDf = pd.read_csv('csv/train.csv')
+    storeDf = pd.read_csv('csv/store.csv')
     combined = pd.merge(trainDf, storeDf, on='Store')
-    combined.to_csv('combined.csv', sheet_name='train.csv X store.csv')
+    combined.to_csv('csv/combined.csv', sheet_name='train.csv X store.csv')
 
 
 def plot(estimate, response, responseLabel, predictor, predictorLabel):
@@ -21,3 +21,5 @@ def plot(estimate, response, responseLabel, predictor, predictorLabel):
     plt.ylabel(responseLabel)
     plt.plot(X_prime[:, 1], predictions, 'r', alpha=0.9)
 
+
+createFlatCsv()
