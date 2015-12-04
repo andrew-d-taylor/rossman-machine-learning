@@ -4,25 +4,49 @@ import pandas as pd
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
 
-def createFlatCsv():
+def create_training_csv():
     trainDf = pd.read_csv('csv/train.csv')
-    storeDf = pd.read_csv('csv/store.csv')
-    combined = pd.merge(trainDf, storeDf, on='Store')
-    combined['StoreType_a'] = [1 if val == 'a' else 0 for val in combined['StoreType']]
-    combined['StoreType_b'] = [1 if val == 'b' else 0 for val in combined['StoreType']]
-    combined['StoreType_c'] = [1 if val == 'c' else 0 for val in combined['StoreType']]
-    combined['StoreType_d'] = [1 if val == 'd' else 0 for val in combined['StoreType']]
-    combined['Assortment'] = [1 if val == 'a' else 0 for val in combined['Assortment']]
-    combined.to_csv('csv/combined.csv', sheet_name='train.csv X store.csv')
+    trainDf = merge_store_data(trainDf, 'csv/store.csv')
+    create_training_features(trainDf)
+    trainDf.to_csv('csv/combined.csv', sheet_name='train.csv X store.csv')
+    return trainDf
 
-def plot(estimate, response, responseLabel, predictor, predictorLabel):
-    X_prime = np.linspace(predictor.min(), predictor.max(), 100)[:, np.newaxis]
-    X_prime = sm.add_constant(X_prime)
-    predictions = estimate.predict(X_prime)
-    plt.scatter(predictor, response, alpha=0.3)
-    plt.xlabel(predictorLabel)
-    plt.ylabel(responseLabel)
-    plt.plot(X_prime[:, 1], predictions, 'r', alpha=0.9)
+def merge_store_data(df, store_csv_filename):
+    storeDf = pd.read_csv(store_csv_filename)
+    df = pd.merge(df, storeDf, on='Store')
+    return df
 
+def create_training_features(df):
+    expand_holiday_features(df)
+    drop_closed_stores(df)
+    df['StoreType_a'] = [1 if val == 'a' else 0 for val in df['StoreType']]
+    df['StoreType_b'] = [1 if val == 'b' else 0 for val in df['StoreType']]
+    df['StoreType_c'] = [1 if val == 'c' else 0 for val in df['StoreType']]
+    df['StoreType_d'] = [1 if val == 'd' else 0 for val in df['StoreType']]
+    df['Assortment'] = [1 if val == 'a' else 0 for val in df['Assortment']]
+    generate_competition_metrics(df)
+    generate_promo2_metrics(df)
+    generate_customer_metrics(df)
+    generate_sales_metrics(df)
 
-createFlatCsv()
+def expand_holiday_features(df):
+    df['public_holiday'] = [1 if val == 'a' else 0 for val in df['StateHoliday']]
+    df['easter_holiday'] = [1 if val == 'b' else 0 for val in df['StateHoliday']]
+    df['christmas_holiday'] = [1 if val == 'c' else 0 for val in df['StateHoliday']]
+
+def drop_closed_stores(df):
+    df = df[df.Open != 0]
+
+def generate_competition_metrics(training_df):
+    return None
+
+def generate_promo2_metrics(df):
+    return None
+
+def generate_customer_metrics(df):
+    return None
+
+def generate_sales_metrics(df):
+    pass
+
+create_training_csv()
