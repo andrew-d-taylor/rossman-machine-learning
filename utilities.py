@@ -3,6 +3,7 @@ __author__ = 'andrew'
 import pandas as pd
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 def create_training_csv():
     trainDf = pd.read_csv('csv/train.csv')
@@ -37,8 +38,25 @@ def expand_holiday_features(df):
 def drop_closed_stores(df):
     df = df[df.Open != 0]
 
-def generate_competition_metrics(training_df):
-    return None
+def generate_competition_metrics(df):
+
+    def get_months(row):
+       # try:
+        cur_date = datetime.strptime(row['Date'], "%Y-%m-%d")
+        comp_year = row['CompetitionOpenSinceYear']
+        comp_month = row['CompetitionOpenSinceMonth']
+        comp_date = comp_year + "-" + comp_month + "-" + str(1)
+        val = abs((cur_date - comp_date).month)
+        return val
+
+     #   except KeyError:
+      #      return 0
+
+    df['Competition_since_months'] = df.apply(get_months, axis=1)
+
+
+
+
 
 def generate_promo2_metrics(df):
     return None
