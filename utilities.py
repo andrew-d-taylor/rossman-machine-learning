@@ -33,8 +33,9 @@ def generate_store_types(df) :
     df['StoreType_b'] = [1 if val == 'b' else 0 for val in df['StoreType']]
     df['StoreType_c'] = [1 if val == 'c' else 0 for val in df['StoreType']]
     df['StoreType_d'] = [1 if val == 'd' else 0 for val in df['StoreType']]
-    df['Assortment'] = [1 if val == 'a' else 0 for val in df['Assortment']]
-
+    df['Assortment_a'] = [1 if val == 'a' else 0 for val in df['Assortment']]
+    df['Assortment_b'] = [1 if val == 'b' else 0 for val in df['Assortment']]
+    df['Assortment_c'] = [1 if val == 'c' else 0 for val in df['Assortment']]
 
 def add_current_week(df):
     def parse_week(date_string):
