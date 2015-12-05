@@ -25,7 +25,7 @@ def create_training_features(df):
     generate_customer_metrics(df)
     generate_competition_metrics(df)
     generate_sales_metrics(df)
-    # generate_promo2_metrics(df)
+    generate_promo2_metrics(df)
 
 
 def generate_store_types(df) :
@@ -65,7 +65,46 @@ def generate_competition_metrics(df):
 
 
 def generate_promo2_metrics(df):
-    return None
+    generate_promo2_days_since_mailing(df)
+
+def generate_promo2_days_since_mailing(df):
+
+    month_map = {1:'Jan', 2:'Feb', 3:'Mar', 4:'Apr', 5:'May', 6:'Jun', 7:'Jul',
+                 8:'Aug', 9:'Sept', 10:'Oct', 11:'Nov', 12:'Dec'}
+
+    df['promo2_days_since_mailing'] = 0
+
+    def calc_days_since_mailing(row):
+        if row['Promo2'] == 0:
+            return 0
+
+        curr_date = datetime.strptime(row['Date'], "%Y-%m-%d")
+        promo2_date_str = str(int(row['Promo2SinceYear']))+'-W'+str(int(row['Promo2SinceWeek']))+'-0'
+        promo2_start = datetime.strptime(promo2_date_str, "%Y-W%W-%w")
+
+        if (curr_date - promo2_start).days <= 0:
+            return 0
+
+        interval_months = row['PromoInterval'].split(',')
+        month = curr_date.month
+
+        month_str = month_map[month]
+        interval_year = curr_date.year
+        while month_str not in interval_months:
+            month -= 1
+            if month == 0:
+                month = 12
+                interval_year -= 1
+            month_str = month_map[month]
+
+        interval_date_str = str(interval_year)+'-'+str(month)+'-1'
+        interval_date = datetime.strptime(interval_date_str, "%Y-%m-%d")
+        val = (curr_date - interval_date).days
+        if val < 0 or val > 95:
+            print("blah")
+        return (curr_date - interval_date).days
+
+    df['promo2_days_since_mailing'] = df.apply(calc_days_since_mailing, axis=1)
 
 
 def generate_customer_metrics(df):
@@ -159,6 +198,47 @@ def generate_avg_customers_by_store_state_holiday(df):
 def generate_sales_metrics(df):
     generate_sales_statistics(df)
     generate_sales_school_state_holiday(df)
+    generate_sales_avg_by_store_week_day(df)
+
+def generate_sales_avg_by_store_week_day(df):
+
+    week_dictionary = {}
+    day_dictionary = {}
+
+    min_id = df['Store'].min()
+    max_id = df['Store'].max() + 1
+    df['avg_sales_by_week_for_store'] = 0
+    df['avg_sales_by_day_for_store'] = 0
+
+    for store_number in range(min_id, max_id):
+        store = df[(df['Store'] == store_number)]
+        for week_number in range(1, 53):
+            weeks = store[(store['current_week'] == week_number)]
+            mean = weeks['Sales'].mean()
+            key = str(store_number) + str(week_number)
+            week_dictionary[key] = mean
+
+        for i in range(1,8):
+           days = store[(store['DayOfWeek'] == i)]
+           mean = days['Sales'].mean()
+           key = str(store_number) + str(i)
+           day_dictionary[key] = mean
+
+
+    def apply_week_avg(row):
+        store_id = row['Store']
+        week = row['current_week']
+        key = str(store_id) + str(week)
+        return week_dictionary[key]
+
+    def apply_day_avg(row):
+        store_id = row['Store']
+        day = row['DayOfWeek']
+        key = str(store_id) + str(day)
+        return day_dictionary[key]
+
+    df['avg_sales_by_week_for_store'] = df.apply(apply_week_avg, axis=1)
+    df['avg_sales_by_day_for_store'] = df.apply(apply_day_avg, axis=1)
 
 
 def generate_sales_school_state_holiday(df):
@@ -242,8 +322,8 @@ def generate_avg_customers_by_week_and_day_by_store(df):
 
     min_id = df['Store'].min()
     max_id = df['Store'].max() + 1
-    df['avg_customers_by_week'] = 0
-    df['avg_customers_by_day'] = 0
+    df['avg_customers_by_week_for_store'] = 0
+    df['avg_customers_by_day_for_store'] = 0
 
     for store_number in range(min_id, max_id):
         store = df[(df['Store'] == store_number)]
@@ -279,4 +359,7 @@ def generate_avg_customers_by_week_and_day_by_store(df):
 
 blah = create_training_csv()
 print(blah.describe())
-print(blah['Open'].value_counts())
+print(blah['promo2_days_since_mailing'].describe())
+print(str(blah['promo2_days_since_mailing'].mean()))
+print(str(blah['promo2_days_since_mailing'].max()))
+print(str(blah['promo2_days_since_mailing'].min()))
