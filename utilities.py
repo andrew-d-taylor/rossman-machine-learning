@@ -7,6 +7,8 @@ def create_training_csv():
     df = merge_store_data(df, 'csv/store.csv')
     df = df.fillna(0)
     df = df[(df['Store'] < 50)]
+    df = df[(df['Open'] != 0)]
+
     create_training_features(df)
     # trainDf.to_csv('csv/combined.csv', sheet_name='train.csv X store.csv')
     return df
@@ -18,7 +20,6 @@ def merge_store_data(df, store_csv_filename):
 
 def create_training_features(df):
     expand_holiday_features(df)
-    drop_closed_stores(df)
     generate_store_types(df)
     add_current_week(df)
     generate_customer_metrics(df)
@@ -45,15 +46,6 @@ def expand_holiday_features(df):
     df['public_holiday'] = [1 if val == 'a' else 0 for val in df['StateHoliday']]
     df['easter_holiday'] = [1 if val == 'b' else 0 for val in df['StateHoliday']]
     df['christmas_holiday'] = [1 if val == 'c' else 0 for val in df['StateHoliday']]
-
-
-def drop_closed_stores(df):
-    df = df[(df['Open'] != 0)]
-    df = df.reset_index(drop=True)
-    def print_closed(x):
-        if x == 0:
-            print('CLOSED')
-    df['Open'].apply(print_closed)
 
 def generate_competition_metrics(df):
 
@@ -85,11 +77,13 @@ def generate_customer_metrics(df):
 
 def generate_customer_statistics_by_store(df):
     max_dictionary = {}
+    min_dictionary = {}
     mean_dictionary = {}
     std_dev_dictionary = {}
     min_id = df['Store'].min()
     max_id = df['Store'].max() + 1
     df['max_customers_by_store'] = 0
+    df['min_customers_by_store'] = 0
     df['mean_customers_by_store'] = 0
     df['std_dev_customers_by_store'] = 0
 
@@ -98,12 +92,17 @@ def generate_customer_statistics_by_store(df):
         store = df[(df['Store'] == store_number)]
         customers = store['Customers']
         max_dictionary[store_number] = customers.max()
+        min_dictionary[store_number] = customers.min()
         mean_dictionary[store_number] = customers.mean()
         std_dev_dictionary[store_number] = customers.std()
 
     def apply_max(row):
         store_id = row['Store']
         return max_dictionary[store_id]
+
+    def apply_min(row):
+        store_id = row['Store']
+        return min_dictionary[store_id]
 
     def apply_mean(row):
         store_id = row['Store']
@@ -117,6 +116,7 @@ def generate_customer_statistics_by_store(df):
     df['mean_customers_by_store'] = df.apply(apply_mean, axis=1)
     df['std_dev_customers_by_store'] = df.apply(apply_std_dev, axis=1)
     df['max_customers_by_store'] = df.apply(apply_max, axis=1)
+    df['min_customers_by_store'] = df.apply(apply_min, axis=1)
 
 
 def generate_avg_customers_by_store_school_holiday(df):
@@ -192,11 +192,13 @@ def generate_sales_school_state_holiday(df):
 
 def generate_sales_statistics(df):
     max_dictionary = {}
+    min_dictionary = {}
     mean_dictionary = {}
     std_dev_dictionary = {}
     min_id = df['Store'].min()
     max_id = df['Store'].max() + 1
     df['max_sales_by_store'] = 0
+    df['min_sales_by_store'] = 0
     df['mean_sales_by_store'] = 0
     df['std_dev_sales_by_store'] = 0
 
@@ -205,12 +207,17 @@ def generate_sales_statistics(df):
         store = df[(df['Store'] == store_number)]
         sales = store['Sales']
         max_dictionary[store_number] = sales.max()
+        min_dictionary[store_number] = sales.min()
         mean_dictionary[store_number] = sales.mean()
         std_dev_dictionary[store_number] = sales.std()
 
     def apply_max(row):
         store_id = row['Store']
         return max_dictionary[store_id]
+
+    def apply_min(row):
+        store_id = row['Store']
+        return min_dictionary[store_id]
 
     def apply_mean(row):
         store_id = row['Store']
@@ -224,6 +231,7 @@ def generate_sales_statistics(df):
     df['mean_sales_by_store'] = df.apply(apply_mean, axis=1)
     df['std_dev_sales_by_store'] = df.apply(apply_std_dev, axis=1)
     df['max_sales_by_store'] = df.apply(apply_max, axis=1)
+    df['min_sales_by_store'] = df.apply(apply_min, axis=1)
 
 
 
@@ -271,3 +279,4 @@ def generate_avg_customers_by_week_and_day_by_store(df):
 
 blah = create_training_csv()
 print(blah.describe())
+print(blah['Open'].value_counts())
